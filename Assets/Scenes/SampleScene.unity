@@ -261,11 +261,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61aa54b534e1dd843b984cd4c43471d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapHeight: 10
-  mapWidth: 10
-  numOfBoids: 100
+  debugPerformance: 0
+  mapHeight: 25
+  mapWidth: 25
+  numOfBoids: 200
   boidPrefab: {fileID: 1968669955030254144, guid: 86179fa87fbf9c54bad1511c7a0b543f, type: 3}
-  algorithmOption: 0
+  algorithmOption: 1
   boids: []
   separationRadius: 1
   alignmentRadius: 2
@@ -274,8 +275,8 @@ MonoBehaviour:
   alignmentWeight: 0.1
   cohesionWeight: 0.2
   minSpeed: 1
-  maxSpeed: 3
-  rotationSpeed: 8
+  maxSpeed: 5
+  rotationSpeed: 15
   computeShader: {fileID: 7200000, guid: 6fd912a1a5a851e498c9b8a9932c0a10, type: 3}
 --- !u!1 &963194225
 GameObject:

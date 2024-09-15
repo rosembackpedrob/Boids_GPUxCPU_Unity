@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BoidSimulation : MonoBehaviour
 {
+    public bool debugPerformance;
     [Header("Map Boundaries")]
     public float mapHeight = 10;
     public float mapWidth = 10;
@@ -37,6 +38,7 @@ public class BoidSimulation : MonoBehaviour
     public int rotationSpeed = 8;
     
     public ComputeShader computeShader;
+    ComputeBuffer boidBuffer;
 
 
     private void Start() 
@@ -134,17 +136,71 @@ public class BoidSimulation : MonoBehaviour
         float seqTime = endTime - startTime;
         int FPS = (int)(1 / Time.deltaTime);
 
-        /* if(Time.realtimeSinceStartup >= 9f)
+        if(Time.realtimeSinceStartup >= 9f && debugPerformance)
         {
             Debug.Log($"Tempo de Execução do Sequencial:\n {seqTime}\n" +
                     $"Frametime: {Time.deltaTime} & FPS: {FPS}");
-        } */
+        }
             
     }
 
     private void BoidsGPUSimulation()
     {
+        //Starting and Passing Data for array of BoidGPU
+        BoidGPU[] boidData = new BoidGPU[numOfBoids];
         
+        for (int i = 0; i < boids.Count; i++)
+        {
+            boidData[i] = boids[i].StartBoidGPU();
+        }
+        
+        this.boidBuffer = new ComputeBuffer(numOfBoids, BoidGPU.Size);
+        boidBuffer.SetData(boidData);
+
+        computeShader.SetBuffer(0, "boids", boidBuffer);
+        computeShader.SetInt("numOfBoids", boids.Count);
+        computeShader.SetFloat("separationRadius", separationRadius);
+        computeShader.SetFloat("alignmentRadius", alignmentRadius);
+        computeShader.SetFloat("cohesionRadius", cohesionRadius);
+        computeShader.SetFloat("separationWeight", separationWeight);
+        computeShader.SetFloat("alignmentWeight", alignmentWeight);
+        computeShader.SetFloat("cohesionWeight", cohesionWeight);
+
+        //Calling our Update method for the actual object, not the data:
+        int threadNum = Mathf.CeilToInt(numOfBoids / 32.0f);
+        computeShader.Dispatch(0, threadNum, 1, 1);
+
+        float startTime = Time.realtimeSinceStartup;
+
+        boidBuffer.GetData(boidData);
+        for (int i = 0; i < boids.Count; i++)
+        {
+            boids[i].UpdateBoidGPU(
+                boidData[i].separationVelocity,
+                boidData[i].alignmentVelocity,
+                boidData[i].cohesionVelocity
+            );
+        }
+
+        float endTime = Time.realtimeSinceStartup;
+        float seqTime = endTime - startTime;
+        int FPS = (int)(1 / Time.deltaTime);
+
+        if(Time.realtimeSinceStartup >= 9f  && debugPerformance)
+        {
+            Debug.Log($"Tempo de Execução do Paralelo:\n {seqTime}\n" +
+                    $"Frametime: {Time.deltaTime} & FPS: {FPS}");
+        }
+
+        boidBuffer.Release();
+    }
+
+    private void OnDestroy()
+    {
+        if (algorithmOption  == OPTION.GPUCOMPUTESHADER)
+        {
+            boidBuffer.Dispose();
+        }
     }
 
 }

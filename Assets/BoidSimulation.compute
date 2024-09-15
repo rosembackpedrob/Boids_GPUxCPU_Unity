@@ -1,26 +1,90 @@
 #pragma kernel BoidSimulation
 
+struct BoidGPU
+{
+    float3 velocity;
+    float3 position;
+    float3 separationVelocity;
+    float3 alignmentVelocity;
+    float3 cohesionVelocity;
+};
 
-//we are going to organize in linear and distribute 10 SMs per block
-[numthreads(10,1,1)] 
+RWStructuredBuffer<BoidGPU> boids;
+
+int numOfBoids;
+float separationRadius;
+float alignmentRadius;
+float cohesionRadius;
+float separationWeight;
+float alignmentWeight;
+float cohesionWeight;
+
+//we are going to organize in linear and distribute 32 SMs per block
+[numthreads(32,1,1)] 
 void BoidSimulation (uint3 id : SV_DispatchThreadID)
 {
-    struct BoidGPU
+    float3 boidPosition = boids[id.x].position;
+    
+    int numOfNeighboursSeparate = 0;
+    int numOfNeighboursAlign = 0;
+    int numOfNeighboursCohesion = 0;
+
+    float3 neighboursCenterPosition = float3(0, 0, 0);
+    
+    for (int iNeighbour = 0; iNeighbour < numOfBoids; iNeighbour++) 
     {
-        float3 velocity;
-        float3 position;
-        float3 separationVelocity;
-        float3 alignmentVelocity;
-        float3 cohesionVelocity;
-    };
+        if ((uint)iNeighbour != id.x)  //or id.x is the SM, and so each boid stored in them
+        {
+            BoidGPU neighbour = boids[iNeighbour];
 
-    RWStructuredBuffer<BoidGPU> boids;
+            float3 neighbourPosition = neighbour.position;
+            float dist = distance(boidPosition, neighbourPosition);
 
-    int numberOfBoids;
-    float separationRadius;
-    float alignmentRadius;
-    float cohesionRadius;
-    float separationWeight;
-    float alignmentWeight;
-    float cohesionWeight;
+            //Verifiying rules:
+            if (dist < separationRadius)
+            {
+                float3 separationVector = boidPosition - neighbourPosition;
+                float3 separationDirection = normalize(separationVector);
+                separationDirection /= dist;
+                boids[id.x].separationVelocity += separationDirection;
+                numOfNeighboursSeparate++;
+            }
+
+            if (dist < alignmentRadius)
+            {
+                boids[id.x].alignmentVelocity += neighbour.velocity;
+                numOfNeighboursAlign++;
+            }
+
+            if (dist < cohesionRadius)
+            {
+                neighboursCenterPosition += neighbourPosition;
+                numOfNeighboursCohesion++;
+            }
+        }
+    }
+
+    //Applying all Rules:
+    if (numOfNeighboursSeparate != 0)
+    {
+        boids[id.x].separationVelocity /= (float)numOfNeighboursSeparate;
+        //boids[id.x].separationVelocity = normalize(boids[id.x].separationVelocity);
+        boids[id.x].separationVelocity *= separationWeight;
+    }
+
+    if(numOfNeighboursAlign != 0)
+    {
+        boids[id.x].alignmentVelocity /= (float)numOfNeighboursAlign;
+        //boids[id.x].alignmentVelocity = normalize(boids[id.x].alignmentVelocity);
+        boids[id.x].alignmentVelocity *= alignmentWeight;
+    }
+
+    if(numOfNeighboursCohesion != 0)
+    {
+        neighboursCenterPosition /= (float)numOfNeighboursCohesion;
+        float3 cohesionDirection = neighboursCenterPosition - boidPosition;
+        cohesionDirection = normalize(cohesionDirection);
+        boids[id.x].cohesionVelocity *= cohesionWeight;
+    }
+
 }
