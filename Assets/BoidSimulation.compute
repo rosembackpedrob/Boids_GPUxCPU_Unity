@@ -1,14 +1,26 @@
-// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel BoidSimulation
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+//we are going to organize in linear and distribute 10 SMs per block
+[numthreads(10,1,1)] 
+void BoidSimulation (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    struct BoidGPU
+    {
+        float3 velocity;
+        float3 position;
+        float3 separationVelocity;
+        float3 alignmentVelocity;
+        float3 cohesionVelocity;
+    };
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    RWStructuredBuffer<BoidGPU> boids;
+
+    int numberOfBoids;
+    float separationRadius;
+    float alignmentRadius;
+    float cohesionRadius;
+    float separationWeight;
+    float alignmentWeight;
+    float cohesionWeight;
 }

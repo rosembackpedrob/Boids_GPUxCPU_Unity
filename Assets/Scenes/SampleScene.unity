@@ -228,7 +228,7 @@ GameObject:
   - component: {fileID: 742540596}
   - component: {fileID: 742540597}
   m_Layer: 0
-  m_Name: Boids
+  m_Name: BoidSimulation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -261,9 +261,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61aa54b534e1dd843b984cd4c43471d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mapHeight: 10
+  mapWidth: 10
+  numOfBoids: 100
   boidPrefab: {fileID: 1968669955030254144, guid: 86179fa87fbf9c54bad1511c7a0b543f, type: 3}
-  boidsNumber: 100
+  algorithmOption: 0
   boids: []
+  separationRadius: 1
+  alignmentRadius: 2
+  cohesionRadius: 1
+  separationWeight: 1
+  alignmentWeight: 0.1
+  cohesionWeight: 0.2
+  minSpeed: 1
+  maxSpeed: 3
+  rotationSpeed: 8
+  computeShader: {fileID: 7200000, guid: 6fd912a1a5a851e498c9b8a9932c0a10, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,13 +362,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.2977793, y: 0.13273174, z: -0.041850146, w: 0.9444355}
+  m_LocalPosition: {x: -10, y: 20, z: -35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 35, y: 16, z: 0}
 --- !u!1 &1453274122
 GameObject:
   m_ObjectHideFlags: 0
@@ -456,7 +469,7 @@ Transform:
   m_GameObject: {fileID: 1453274122}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -1}
+  m_LocalPosition: {x: 0, y: -1, z: 0}
   m_LocalScale: {x: 6, y: 6, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children: []
